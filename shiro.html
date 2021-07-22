@@ -1,0 +1,757 @@
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <script src="http://cdn.bootcdn.net/ajax/libs/crypto-js/4.0.0/crypto-js.js"></script>
+    <script>
+        var TC_OBJECT = 0x73
+        var TC_CLASS = 0x76
+        var TC_ARRAY = 0x75
+        var TC_STRING = 0x74
+        var TC_LONGSTRING = 0x7c
+        var TC_ENUM = 0x7e
+        var TC_CLASSDESC = 0x72
+        var TC_PROXYCLASSDESC = 0x7d
+        var TC_REFERENCE = 0x71
+        var TC_NULL = 0x70
+        var TC_EXCEPTION = 0x7b
+        var TC_RESET = 0x79
+        var TC_BLOCKDATA = 0x77
+        var TC_BLOCKDATALONG = 0x7a
+
+        var TC_CLASSDESC = 0x72
+        var TC_PROXYCLASSDESC = 0x7d
+        var TC_NULL = 0x70
+        var TC_REFERENCE = 0x71
+
+        var payloadSerialized;
+        var data;
+        var _classDataDescriptions = [];
+        var classDataDescription = ""
+        var handleValue = 0x7e0000;
+        var realKey;
+        var indent = "";
+        function ClassField(typeCode) {
+            this._typeCode = typeCode;
+            this._name = "";
+            this._className1 = "";
+        }
+        function ClassDetails(className) {
+            this._className = className;
+            this._refHandle = -1;
+            this._classDescFlags = 0;
+            this._fieldDescriptions = [];
+        }
+        function ClassDataDesc() {
+            this._classDetails = [];
+        }
+
+        function hexToBytes(hex) {
+            for (var bytes = [], c = 0; c < hex.length; c += 2) {
+                bytes.push(parseInt(hex.substr(c, 2), 16));
+            }
+            return bytes;
+        }
+        function decryptAES() {
+            payloadSerialized = "";
+            data = [];
+            _classDataDescriptions = [];
+            classDataDescription = ""
+            handleValue = 0x7e0000;
+            realKey = "";
+            indent = "";
+            var keys = ["kPH+bIxk5D2deZiIxcaaaA==", "0AvVhmFLUs0KTA3Kprsdag==", "1AvVhdsgUs0FSA3SDFAdag==", "1QWLxg+NYmxraMoxAXu/Iw==", "1tC/xrDYs8ey+sa3emtiYw==", "25BsmdYwjnfcWmnhAciDDg==", "2A2V+RFLUs+eTA3Kpr+dag==", "2adsfasdqerqerqewradsf==", "2AvVCXsxUs0FSA7SYFjdQg==", "2AvVhdsgERdsSA3SDFAdag==", "2AvVhdsgUs0FSA3SaFAdfg==", "2AvVhdsgUs0FSA3SDFAdag==", "2AvVhdsgUs0FSA3SDFAder==", "2AvVhdsgUsOFSA3SDFAdag==", "2AvVhmFLUs0KTA3Kprsdag==", "2AvVidsaUSofSA3SDFAdog==", "2cVtiE83c4lIrELJwKGJUw==", "2itfW92XazYRi5ltW0M2yA==", "3Av2hmFLAs0BTA3Kprsd6E==", "3AvVhdAgUs0FSA4SDFAdBg==", "3AvVhdAgUs1FSA4SDFAdBg==", "3AvVhMFLIs0KTA3Kprsdag==", "3AvVhmFLUs0KTA3KaTHGFg==", "3AvVhmFLUs0KTA3Kprsdag==", "3AvVhmFLUs0KTA3Kprsdag==", "3JvYhmBLUs0ETA5Kprsdag==", "3qDVdLawoIr1xFd6ietnsg==", "3qDVdLawoIr1xFd6ietnwg==", "3rvVhmFLUs0KAT3Kprsdag==", "4AvVhdsgUs0F563SDFAdag==", "4AvVhm2LUs0KTA3Kprsdag==", "4AvVhmFLUs0KTA3KAAAAAA==", "4AvVhmFLUs0KTA3Kprsdag==", "4AvVhmFLUs0KTA3KprSdAg==", "4AvVhmFLUs0KTA3Kprseaf==", "4AvVhmFLUs0TTA3Kprsdag==", "4AvVhmFLUs5KTA1Kprsdag==", "4AvVhmFLUsOKTA3Kprsdag==", "4BvVhmFLUs0KTA3Kprsdag==", "4rvVhmFLUs0KAT3Kprsdag==", "4WCZSJyqdUQsije93aQIRg==", "5aaC5qKm5oqA5pyvAAAAAA==", "5AvVhCsgUs0FSA3SDFAdag==", "5AvVhmFLUS0ATA4Kprsdag==", "5AvVhmFLUs0KTA3Kprsdag==", "5J7bIJIV0LQSN3c9LPitBQ==", "5oiR5piv5p2h5ZK46bG8IQ==", "5RC7uBZLkByfFfJm22q/Zw==", "66v1O8keKNV3TTcGPK1wzg==", "6AvVhmFLUs0KTA3Kprsdag==", "6NfXkC7YVCV5DASIrEm1Rg==", "6Zm+6I2j5Y+R5aS+5ZOlAA==", "6ZmI6I2j3Y+R1aSn5BOlAA==", "6ZmI6I2j5Y+R5aSn5ZOlAA==", "7AvVhmFLUs0KTA3Kprsdag==", "8AvVhdsgUs0FSA3SDFAdag==", "8AvVhmFLUs0KTA3Kprsdag==", "8BvVhmFLUs0KTA3Kprsdag==", "9Ami6v2G5Y+r5aPnE4OlBB==", "9AvVhmFLUs0KTA3Kprsdag==", "9AVvhnFLuS3KTV8KprsdAg==", "9FvVhtFLUs0KnA3Kprsdyg==", "A+kWR7o9O0/G/W6aOGesRA==", "a2VlcE9uR29pbmdBbmRGaQ==", "a3dvbmcAAAAAAAAAAAAAAA==", "A7UzJgh1+EWj5oBFi+mSgw==", "AF05JAuyuEB1ouJQ9Y9Phg==", "aG91c2Vob3VzZWhvdXNlMg==", "AsfawfsdfaAasdWWAAAAAA==", "aU1pcmFjbGVpTWlyYWNsZQ==", "AztiX2RUqhc7dhOzl1Mj8Q==", "b2EAAAAAAAAAAAAAAAAAAA==", "B9rPF8FHhxKJZ9k63ik7kQ==", "Bf7MfkNR0axGGptozrebag==", "bWFveXUtY2hhbgAAAAAAAA==", "bWljcm9zAAAAAAAAAAAAAA==", "bWluZS1hc3NldC1rZXk6QQ==", "bXdrXl9eNjY2KjA3Z2otPQ==", "bXRvbnMAAAAAAAAAAAAAAA==", "bya2HkYo57u6fWh5theAWw==", "c+3hFGPjbgzGdrC+MHgoRQ==", "c2hpcm9fYmF0aXMzMgAAAA==", "c2hvdWtlLXBsdXMuMjAxNg==", "cGhyYWNrY3RmREUhfiMkZA==", "cGljYXMAAAAAAAAAAAAAAA==", "Cj6LnKZNLEowAZrdqyH/Ew==", "ClLk69oNcA3m+s0jIMIkpg==", "cmVtZW1iZXJNZQAAAAAAAA==", "d2ViUmVtZW1iZXJNZUtleQ==", "dsesfswfjn23409isfadAA==", "duhfin37x6chw29jsne45m==", "empodDEyMwAAAAAAAAAAAA==", "enpyX2Nvb2tpZV9rZXkAAA==", "ertVhmFLUs0KTA3Kprsdag==", "eXNmAAAAAAAAAAAAAAAAAA==", "f/SY5TIve5WWzT4aQlABJA==", "fCq+/xW488hMTCD+cmJ3aQ==", "fcq+/xW488hMTCD+cmJ3aq==", "fCq+/xW488hMTCE+cmJ3FF==", "fdCEiK9YvLC668sS43CJ6A==", "FjbNm1avvGmWE9CY2HqV75==", "FJoQCiz0z5XWz2N2LyxNww==", "FL9HL9Yu5bVUJ0PDU1ySvg==", "FP7qKJzdJOGkzoQzo2wTmA==", "fsHspZw/92PrS3XrPW+vxw==", "GAevYnznvgNCURavBhCr1w==", "GhrF5zLfq1Dtadd1jlohhA==", "GHxH6G3LFh8Zb3NwoRgfFA==", "GsHaWo4m1eNbE0kNSMULhg==", "hBlzKg78ajaZuTE0VLzDDg==", "HeUZ/LvgkO7nsa18ZyVxWQ==", "HOlg7NHb9potm0n5s4ic0Q==", "HoTP07fJPKIRLOWoVXmv+Q==", "HWrBltGvEZc14h9VpMvZWw==", "i45FVt72K2kLgvFrJtoZRw==", "IduElDUpDDXE677ZkhhKnQ==", "ikB3y6O9BpimrZLB3rca0w==", "Is9zJ3pzNh2cgTHB4ua3+Q==", "iycgIIyCatQofd0XXxbzEg==", "Jt3C93kMR9D5e8QzwfsiMw==", "kPH+bIxk5D2deZiIxcabaA==", "kPH+bIxk5D2deZiIxcacaA==", "kPv59vyqzj00x11LXJZTjA==", "KU471rVNQ6k7PQL4SqxgJg==", "L7RioUULEFhRyxM7a2R/Yg==", "l8cc6d2xpkT1yFtLIcLHCg==", "LEGENDCAMPUSCIPHERKEAA==", "lt181dcQVz/Bo9Wb8ws/Cg==", "lT2UvDUmQwewm6mMoiw4Ig==", "lxuEtAWbv+SgUOXREM+zrA==", "m0/5ZZ9L4jjQXn7MREr/bw==", "m05ZZ9L4jjQXn7MREpb7AA==", "M2djA70UBBUPDibGZBRvrA==", "mIccZhQt6EBHrZIyw1FAXQ==", "MPdCMZ9urzEA50JDlDYYDg==", "MTIzNDU2Nzg5MGFiY2RlZg==", "MTIzNDU2NzgxMjM0NTY3OA==", "MzVeSkYyWTI2OFVLZjRzZg==", "NGk/3cQ6F5/UNPRh8LpMIg==", "NoIw91X9GSiCrLCF03ZGZw==", "NsZXjXVklWPZwOfkvk6kUA==", "O4pdf+7e+mZe8NyxMTPJmQ==", "oPH+bIxk5E2enZiIxcqaaA==", "OUHYQzxQ/W9e/UjiAGu6rg==", "OY//C4rhfwNxCQAQCrQQ1Q==", "pbnA+Qzen1vjV3rNqQBLHg==", "pyyX1c5x2f0LZZ7VKZXjKO==", "Q01TX0JGTFlLRVlfMjAxOQ==", "QAk0rp8sG0uJC4Ke2baYNA==", "QDFCnfkLUs0KTA3Kprsdag==", "QF5HMyZAWDZYRyFnSGhTdQ==", "qQFtSnnj/sx7vu51ixAyEQ==", "QUxQSEFNWVNPRlRCVUlMRA==", "QVN1bm5uJ3MgU3Vuc2l0ZQ==", "r0e3c16IdVkouZgk1TKVMg==", "R29yZG9uV2ViAAAAAAAAAA==", "Rb5RN+LofDWJlzWAwsXzxg==", "rPNqM6uKFCyaL10AK51UkQ==", "RVZBTk5JR0hUTFlfV0FPVQ==", "s0KTA3mFLUprK4AvVhsdag==", "s2SE9y32PvLeYo+VGFpcKA==", "S8+74LJR9whLdemqJbJeeA==", "sBv2t3okbdm3U0r2EVcSzB==", "SDKOLKn2J1j/2BHjeZwAoQ==", "sgIQrqUVxa1OZRRIK3hLZw==", "sHdIjUN6tzhl8xZMG3ULCQ==", "SkZpbmFsQmxhZGUAAAAAAA==", "SrpFBcVD89eTQ2icOD0TMg==", "TGMPe7lGO/Gbr38QiJu1/w==", "tiVV6g3uZBGfgshesAQbjA==", "U0hGX2d1bnMAAAAAAAAAAA==", "U3BAbW5nQmxhZGUAAAAAAA==", "U3ByaW5nQmxhZGUAAAAAAA==", "UGlzMjAxNiVLeUVlXiEjLw==", "Ul7XhPoIX91QMWVIFfzudg==", "Us0KvVhTeasAm43KFLAeng==", "V2hhdCBUaGUgSGVsbAAAAA==", "vXP33AonIp9bFwGl7aT7rA==", "w793pPq5ZVBKkj8OhV4KaQ==", "WcfHGU25gNnTxTlmJMeSpw==", "wGiHplamyXlVB11UXWol8g==", "WkhBTkdYSUFPSEVJX0NBVA==", "wrjUh2ttBPQLnT4JVhriug==", "WuB+y2gcHRnY2Lg9+Aqmqg==", "wyLZMDifwq3sW1vhhHpgKA==", "XgGkgqGqYrix9lI6vxcrRw==", "XTx6CKLo/SdSgub+OPHSrw==", "xVmmoltfpb8tTceuT5R7Bw==", "Y1JxNSPXVwMkyvES/kJGeQ==", "Y21iYwAAAAAAAAAAAAAAAA==", "yeAAo1E8BOeAYfBlm4NG9Q==", "YI1+nBV//m7ELrIyDHm6DQ==", "Ymx1ZXdoYWxlAAAAAAAAAA==", "yNeUgSzL/CfiWw1GALg6Ag==", "YnlhdnMAAAAAAAAAAAAAAA==", "YVd4dmRtVjViM1UlM0QIdn==", "YWdlbnRAZG1AMjAxOHN3Zg==", "YWJjZGRjYmFhYmNkZGNiYQ==", "YystomRZLMUjiK0Q1+LFdw==", "Z3VucwAAAAAAAAAAAAAAAA==", "Z3VucwAAAAAAAAAAAAABBB==", "Z3VucwACAOVAKALACAADSA==", "ZAvph3dsQs0FSL3SDFAdag==", "ZGdmdwAAAAAAAAAAAAAAAA==", "zIiHplamyXlVB11UXWol8g==", "ZjQyMTJiNTJhZGZmYjFjMQ==", "ZmFsYWRvLnh5ei5zaGlybw==", "ZmxvZ19zaGlyb19rZXkAAA==", "ZnJlc2h6Y24xMjM0NTY3OA==", "zSyK5Kp6PZAAjlT+eeNMlg==", "ZUdsaGJuSmxibVI2ZHc9PQ==", "ZWvohmPdUsAWTwAApPqdAA=="];
+            var rawPayload = document.getElementById('rawPayload').value;
+            try {
+                var payloadBase64DecodeStr = window.atob(rawPayload);
+            } catch (error) {
+                alert("输入正确的payload！"+error);
+            }
+            for (let i = 0, len = keys.length; i < len; i++) {
+                var keyHex = CryptoJS.enc.Base64.parse(keys[i]);
+                //console.log(CryptoJS.enc.Utf8.stringify(payloadDecrypted));
+                var payloadEncryptedHex = payloadBase64DecodeStr.slice(16);
+                payloadEncryptedHex = btoa(payloadEncryptedHex);
+                var IVHex = payloadBase64DecodeStr.slice(0, 16);
+                IVHex = btoa(IVHex)
+                IVHex = CryptoJS.enc.Base64.parse(IVHex)
+                var payloadDecrypted = CryptoJS.AES.decrypt(payloadEncryptedHex, keyHex, {
+                    iv: IVHex,
+                    mode: CryptoJS.mode.CBC,
+                    padding: CryptoJS.pad.Pkcs7
+                });
+                payloadBin = payloadDecrypted.toString()
+                if (payloadBin.slice(0, 8) == "aced0005") {
+                    realKey = keys[i];
+                    document.getElementById("status").innerText = "成功";
+                    document.getElementById("key").innerText = "Key: " + realKey;
+                    payloadSerialized = payloadBin;
+                    try {
+                        parseStream();
+                    } catch (error) {
+                        document.getElementById("deserialError").innerText = "读取序列化对象过程中出现错误：" + error + "\n将展示解密后序列化对象";
+                        //document.getElementById("rawObject")
+                        document.getElementById("rawObject").innerText = payloadSerialized;
+                        document.getElementById("rawObject").style.display = "";
+                    }
+                    outputClassDataDescription();
+                    detectBytecode();
+                    return;
+                }
+                document.getElementById("status").innerText = "解密失败，未找到对应key或内容有问题。本工具目前仅支持CBC模式。";
+            }
+        }
+        function detectBytecode() {
+            var bytecode = "";
+            var bytecodeLength = 0;
+            if (payloadSerialized.indexOf("cafebabe") != -1) {
+                var bytecodeStartAt = payloadSerialized.indexOf("cafebabe");
+                //console.log("Found Bytecode!!!");
+                bytecodeLength = parseInt("0x" + payloadSerialized.slice(bytecodeStartAt - 8, bytecodeStartAt))
+                bytecode = payloadSerialized.slice(bytecodeStartAt, bytecodeStartAt + bytecodeLength * 2);
+            } else {
+                return;
+            }
+            //console.log(bytecode);
+            var classfileData = new Uint8Array(bytecode.match(/[\da-f]{2}/gi).map(function (h) {
+                return parseInt(h, 16)
+            }))
+            const classFileTag = document.createElement('a');
+            const classFileBlob = new Blob([classfileData], { type: 'application/octet-stream' });
+            classFileTag.download = "bytecode.class";
+            classFileTag.href = URL.createObjectURL(classFileBlob, { type: 'application/octet-stream' });
+            document.getElementById("bytecode").innerText = "发现字节码！长度为: " + bytecodeLength + "字节";
+            classFileTag.innerText = "点此下载字节码";
+            classFileTag.id = "bytecodeFile";
+            var div = document.getElementById("result");
+            var ori = document.getElementById("bytecodeFile");
+            div.replaceChild(classFileTag, ori);
+        }
+        function outputClassDataDescription() {
+            classDataDescription = ""
+            for (var i = 0; i < _classDataDescriptions.length; i++) {
+                classDataDescription += "Class: " + _classDataDescriptions[i]._classDetails[0]._className + "<br>";
+                classDataDescription += "&nbsp;&nbsp;Fields:<br>";
+                if (_classDataDescriptions[i]._classDetails[0]._fieldDescriptions != null) {
+                    for (var j = 0; j < _classDataDescriptions[i]._classDetails[0]._fieldDescriptions.length; j++) {
+                        classDataDescription += "&nbsp;&nbsp;&nbsp;&nbsp;name:" + _classDataDescriptions[i]._classDetails[0]._fieldDescriptions[j]._name + "<br>";
+                        if (_classDataDescriptions[i]._classDetails[0]._fieldDescriptions[j]._className1 != '') {
+                            classDataDescription += "&nbsp;&nbsp;&nbsp;&nbsp;classname1:" + _classDataDescriptions[i]._classDetails[0]._fieldDescriptions[j]._className1 + "<br>";
+                        }
+                    }
+                }
+            }
+            document.getElementById("deserializedObject").innerHTML = classDataDescription;
+        }
+        function increaseIndent() {
+            indent += "  ";
+        }
+        function decreaseIndent() {
+            if (indent.length < 2) {
+                throw new Error("Error: Illegal indentation decrease.")
+            }
+            indent = indent.substr(0, indent.length - 2)
+        }
+        function print(content) {
+            var deserializedOutput = "";
+            deserializedOutput += indent + content;
+            //console.log(deserializedOutput);
+        }
+        function parseStream() {
+            data = hexToBytes(payloadSerialized).slice(4)
+            increaseIndent();
+            while (data.length > 0) {
+                readContentElement();
+            }
+            decreaseIndent();
+        }
+        function readContentElement() {
+            switch (data[0]) {
+                case TC_OBJECT:
+                    readNewObject();
+                    break;
+                case TC_CLASS:
+                    readNewClass();
+                    break;
+                case TC_ARRAY:
+                    readNewArray();
+                    break;
+                case TC_STRING:
+                case TC_LONGSTRING:
+                    readNewString();
+                    break;
+                case TC_ENUM:
+                    readNewEnum();
+                    break;
+                case TC_CLASSDESC:
+                case TC_PROXYCLASSDESC:
+                    readNewClassDesc();
+                    break;
+                case TC_REFERENCE:
+                    readPrevObject();
+                    break
+                case TC_NULL:
+                    readNullReference();
+                    break;
+                case TC_BLOCKDATA:
+                    readBlockData();
+                    break;
+                case TC_BLOCKDATALONG:
+                    readLongBlockData();
+                    break;
+                default:
+                    throw new Error("Error: Unexpected identifier for object field value 0x" + data[0].toString(16));
+            }
+        }
+        function readNewObject() {
+            var cdd = new ClassDataDesc();
+            var b1;
+            b1 = data.shift();
+            print("TC_OBJECT - 0x" + b1);
+            increaseIndent();
+            cdd = readClassDesc()
+            newHandle();
+            readClassData(cdd);
+
+        }
+        function readNewClass() {
+            var b1 = data.shift();
+            readClassDesc();
+            newHandle()
+        }
+        function readNewArray() {
+            var b1, b2, b3, b4;
+            var size;
+            b1 = data.shift();
+            print("TC_ARRAY - 0x" + b1);
+            var cdd = readClassDesc()
+            if (cdd._classDetails.length != 1) {
+                throw new Error("Error: Array class description made up of more than one class.")
+            }
+            var cd = cdd._classDetails[0];
+            if (cd._className[0] != '[') {
+                throw new Error("Error: Array class name does not begin with '['.")
+            }
+            newHandle();
+            b1 = data.shift();
+            b2 = data.shift();
+            b3 = data.shift();
+            b4 = data.shift();
+            size = ((b1 << 24) & 0xff000000) +
+                ((b2 << 16) & 0xff0000) +
+                ((b3 << 8) & 0xff00) +
+                ((b4) & 0xff);
+            print("array size" + size);
+            increaseIndent()
+            for (var i = 0; i < size; i++) {
+                print("Index" + i + ":");
+                increaseIndent();
+                readFieldValue(cd._className[1].charCodeAt(0));
+                decreaseIndent();
+            }
+            decreaseIndent();
+        }
+        function readNewEnum() {
+            var b1;
+            b1 = data.shift();
+            readClassDesc();
+            newHandle();
+            readNewString();
+        }
+        function readClassData(cdd) {
+            var classIndex;
+            if (cdd != null) {
+                for (classIndex = 0; classIndex < cdd._classDetails.length; classIndex++) {
+                    if ((cdd._classDetails[classIndex]._classDescFlags & 0x04) == 0x04) {
+                        print("externalContents");
+                        increaseIndent();
+                        throw new Error("Unable to parse externalContents as the format is specific to the implementation class.")
+                    }
+                }
+                for (classIndex = cdd._classDetails.length - 1; classIndex >= 0; classIndex--) {
+                    var cd = cdd._classDetails[classIndex];
+                    if ((cd._classDescFlags & 0x02) == 0x02) {
+                        cd._fieldDescriptions.forEach(cf => {
+                            readFieldValue(cf._typeCode)
+                        });
+                    }
+                    if (((cd._classDescFlags & 0x02) == 0x02 && (cd._classDescFlags & 0x01) == 0x01) || ((cd._classDescFlags & 0x04) == 0x04 && (cd._classDescFlags & 0x08) == 0x08)) {
+                        while (data[0] != 0x78) {
+                            readContentElement();
+                        }
+                        data.shift();
+                    }
+                }
+            } else {
+                print("N/A");
+            }
+        }
+        function readFieldValue(typecode) {
+            switch (String.fromCharCode(typecode)) {
+                case 'B':		//byte
+                    readByteField();
+                    break;
+
+                case 'C':		//char
+                    readCharField();
+                    break;
+
+                case 'D':		//double
+                    readDoubleField();
+                    break;
+
+                case 'F':		//float
+                    readFloatField();
+                    break;
+
+                case 'I':		//int
+                    readIntField();
+                    break;
+
+                case 'J':		//long
+                    readLongField();
+                    break;
+
+                case 'S':		//short
+                    readShortField();
+                    break;
+
+                case 'Z':		//boolean
+                    readBooleanField();
+                    break;
+
+                case '[':		//array
+                    readArrayField();
+                    break;
+
+                case 'L':		//object
+                    readObjectField();
+                    break;
+
+                default:
+                    throw new Error("Error: Illegal field type code ('" + typeCode.toString(16) + "')")
+            }
+        }
+        function readByteField() {
+            var b1 = data.shift();
+            print("(byte) " + b1);
+        }
+        function readCharField() {
+            var b1 = data.shift();
+            var b2 = data.shift();
+            var c1 = (((b1 << 8) & 0xff00) + b2 & 0xff);
+            print("(char) " + String.fromCharCode(c1));
+        }
+        function readDoubleField() {
+            var b1, b2, b3, b4, b5, b6, b7, b8;
+            b1 = data.shift();
+            b2 = data.shift();
+            b3 = data.shift();
+            b4 = data.shift();
+            b5 = data.shift();
+            b6 = data.shift();
+            b7 = data.shift();
+            b8 = data.shift();
+            var db = ((b1 << 56) & 0xff00000000000000) +
+                ((b2 << 48) & 0xff000000000000) +
+                ((b3 << 40) & 0xff0000000000) +
+                ((b4 << 32) & 0xff00000000) +
+                ((b5 << 24) & 0xff000000) +
+                ((b6 << 16) & 0xff0000) +
+                ((b7 << 8) & 0xff00) +
+                (b8 & 0xff)
+            print("(double) " + db);
+        }
+        function readFloatField() {
+            var b1, b2, b3, b4
+            b1 = data.shift();
+            b2 = data.shift();
+            b3 = data.shift();
+            b4 = data.shift();
+            var ff = ((b1 << 24) & 0xff000000) +
+                ((b2 << 16) & 0xff0000) +
+                ((b3 << 8) & 0xff00) +
+                (b4 & 0xff)
+            print("(float) " + ff)
+        }
+        function readIntField() {
+            var b1, b2, b3, b4
+            b1 = data.shift();
+            b2 = data.shift();
+            b3 = data.shift();
+            b4 = data.shift();
+            var ff = ((b1 << 24) & 0xff000000) +
+                ((b2 << 16) & 0xff0000) +
+                ((b3 << 8) & 0xff00) +
+                (b4 & 0xff)
+            print("(int) " + ff)
+        }
+        function readLongField() {
+            var b1, b2, b3, b4, b5, b6, b7, b8;
+            b1 = data.shift();
+            b2 = data.shift();
+            b3 = data.shift();
+            b4 = data.shift();
+            b5 = data.shift();
+            b6 = data.shift();
+            b7 = data.shift();
+            b8 = data.shift();
+            var db = ((b1 << 56) & 0xff00000000000000) +
+                ((b2 << 48) & 0xff000000000000) +
+                ((b3 << 40) & 0xff0000000000) +
+                ((b4 << 32) & 0xff00000000) +
+                ((b5 << 24) & 0xff000000) +
+                ((b6 << 16) & 0xff0000) +
+                ((b7 << 8) & 0xff00) +
+                (b8 & 0xff)
+            print("(long) " + db);
+        }
+        function readShortField() {
+            var b1 = data.shift();
+            var b2 = data.shift();
+            var c1 = (((b1 << 8) & 0xff00) + b2 & 0xff);
+            print("(short) " + String.fromCharCode(c1));
+        }
+        function readBooleanField() {
+            var b1 = data.shift();
+            print("(boolean) " + (b1 == 0 ? "false" : "true"));
+        }
+        function readArrayField() {
+            print("(array)");
+            switch (data[0]) {
+                case TC_NULL:
+                    readNullReference();
+                    break;
+                case TC_ARRAY:
+                    readNewArray();
+                    break;
+                case TC_REFERENCE:
+                    readPrevObject();
+                    break;
+                default:
+                    throw new Error("Error: Unexpected array field value type (0x" + data[0].toString(16))
+            }
+        }
+        function readObjectField() {
+            switch (data[0]) {
+                case TC_OBJECT:
+                    readNewObject();
+                    break;
+                case TC_REFERENCE:
+                    readPrevObject();
+                    break;
+                case TC_NULL:
+                    readNullReference();
+                    break;
+                case TC_STRING:
+                    readTC_STRING();
+                    break;
+                case TC_CLASS:
+                    readNewClass();
+                    break;
+                case TC_ARRAY:
+                    readNewArray();
+                    break;
+                case TC_ENUM:
+                    readNewEnum();
+                    break;
+                default:
+                    throw new Error("Error: Unexpected identifier for object field value 0x" + data[0].toString(16))
+            }
+        }
+        function readNewClassDesc() {
+            var cdd = new ClassDataDesc();
+            switch (data[0]) {
+                case TC_CLASSDESC:
+                    cdd = readTC_CLASSDESC();
+                    _classDataDescriptions.push(cdd);
+                    return cdd;
+                case TC_PROXYCLASSDESC:
+                    cdd = readTC_PROXYCLASSESDC();
+                    _classDataDescriptions.push(cdd);
+                    return cdd;
+                default:
+                    throw new Error("Invalid newClassDesc type 0x" + data[0].toString(16))
+            }
+        }
+        function readPrevObject() {
+            var b1, b2, b3, b4;
+            var handle;
+            b1 = data.shift();
+            b1 = data.shift();
+            b2 = data.shift();
+            b3 = data.shift();
+            b4 = data.shift();
+            handle = ((b1 << 24) & 0xff000000) +
+                ((b2 << 16) & 0xff0000) +
+                ((b3 << 8) & 0xff00) +
+                ((b4) & 0xff);
+            return handle;
+        }
+        function readNullReference() {
+            var b1;
+            b1 = data.shift();
+        }
+        function readBlockData() {
+            var content = "";
+            var len;
+            var b1;
+            b1 = data.shift();
+            increaseIndent();
+            len = data.shift() & 0xff
+            for (var i = 0; i < len; i++) {
+                content += String.fromCharCode(data.shift())
+            }
+            print("Contents " + content);
+            decreaseIndent();
+        }
+        function readLongBlockData() {
+            var content = "";
+            var len;
+            var b1, b2, b3, b4;
+            increaseIndent();
+            data.shift();
+            b1 = data.shift();
+            b2 = data.shift();
+            b3 = data.shift();
+            b4 = data.shift();
+            len = ((b1 << 24) & 0xff000000) +
+                ((b2 << 16) & 0xff0000) +
+                ((b3 << 8) & 0xff00) +
+                ((b4) & 0xff);
+            for (var i = 0; i < len; i++) {
+                content += String.fromCharCode(data.shift())
+            }
+            print("Contents " + content);
+            decreaseIndent();
+        }
+        function readClassDesc() {
+            switch (data[0]) {
+                case TC_CLASSDESC:
+                case TC_PROXYCLASSDESC:
+                    return readNewClassDesc()
+                case TC_NULL:
+                    readNullReference();
+                    return null;
+                case TC_REFERENCE:
+                    var refHandle = readPrevObject(); //TODO
+                    for (var i = 0; i < _classDataDescriptions.length; i++) {
+                        for (var classIndex = 0; classIndex < _classDataDescriptions[i]._classDetails.length; classIndex++) {
+                            if (_classDataDescriptions[i]._classDetails[classIndex]._refHandle == refHandle) {
+                                var tempCDD = _classDataDescriptions[i];
+                                return buildClassDataDescFromIndex(tempCDD, classIndex);
+                            }
+                        }
+                    }
+                    throw new Error("Error: Invalid classDesc reference 0x" + refHandle.toString(16))
+                default:
+                    throw new Error("Invalid classDesc type 0x" + data[0].toString(16));
+            }
+        }
+        function buildClassDataDescFromIndex(cdd, index) {
+            var returnCDD = new ClassDataDesc();
+            var cd = [];
+            for (var i = index; i < cdd._classDetails.length; i++) {
+                cd.push(cdd._classDetails[i]);
+            }
+            returnCDD._classDetails = cd;
+            return returnCDD;
+        }
+        function readTC_CLASSDESC() {
+            data.shift();
+            var cdd = new ClassDataDesc();
+            increaseIndent();
+            print("className");
+            increaseIndent();
+            cdd._classDetails.unshift(new ClassDetails(readUTF()));
+            decreaseIndent();
+            for (var i = 0; i < 8; i++) {
+                data.shift(); //serialVersionUID
+            }
+            cdd._classDetails[cdd._classDetails.length - 1]._refHandle = handleValue++; //setLastClassHandle
+            readClassDescInfo(cdd);
+            decreaseIndent();
+            return cdd;
+
+        }
+        function readTC_PROXYCLASSESDC() {
+            var cdd = new ClassDataDesc();
+            cdd._classDetails.unshift(new ClassDetails("<Dynamic Proxy Class>"));
+            cdd._classDetails[cdd._classDetails.length - 1]._refHandle = handleValue++; //setLastClassHandle
+            readProxyClassDescInfo(cdd);
+            return cdd;
+        }
+        function readUTF() {
+            var content = ""
+            var b1, b2;
+            var len;
+            b1 = data.shift();
+            b2 = data.shift();
+            len = ((b1 << 8) & 0xff00) + (b2 & 0xff)
+            for (var i = 0; i < len; i++) {
+                b1 = data.shift();
+                content += String.fromCharCode(b1);
+            }
+            print("Value - " + content);
+            return content;
+        }
+        function readLongUtf() {
+            var content = "";
+            var b1, b2, b3, b4, b5, b6, b7, b8;
+            var len;
+            b1 = data.shift();
+            b2 = data.shift();
+            b3 = data.shift();
+            b4 = data.shift();
+            b5 = data.shift();
+            b6 = data.shift();
+            b7 = data.shift();
+            b8 = data.shift();
+            len = ((b1 << 56) & 0xff00000000000000) +
+                ((b2 << 48) & 0xff000000000000) +
+                ((b3 << 40) & 0xff0000000000) +
+                ((b4 << 32) & 0xff00000000) +
+                ((b5 << 24) & 0xff000000) +
+                ((b6 << 16) & 0xff0000) +
+                ((b7 << 8) & 0xff00) +
+                (b8 & 0xff);
+            for (var i = 0; i < len; i++) {
+                b1 = data.shift();
+                content += String.fromCharCode(b1);
+            }
+            return content;
+        }
+        function readClassDescInfo(cdd) {
+            var classDescFlags = "";
+            var b1;
+            b1 = data.shift();
+            if ((b1 & 0x01) == 0x01) { classDescFlags += "SC_WRITE_METHOD | "; }
+            if ((b1 & 0x02) == 0x02) { classDescFlags += "SC_SERIALIZABLE | "; }
+            if ((b1 & 0x04) == 0x04) { classDescFlags += "SC_EXTERNALIZABLE | "; }
+            if ((b1 & 0x08) == 0x08) { classDescFlags += "SC_BLOCKDATA | "; }
+            if (classDescFlags.length > 0) {
+                classDescFlags = classDescFlags.substring(0, classDescFlags.length - 3);
+            }
+            cdd._classDetails[cdd._classDetails.length - 1]._classDescFlags = b1;
+            readFields(cdd);
+            readClassAnnotation();
+            addSuperClassDesc(cdd, readSuperClassDesc());
+
+        }
+        function readProxyClassDescInfo(cdd) {
+            var count;
+            var b1, b2, b3, b4;
+            b1 = data.shift();
+            b2 = data.shift();
+            b3 = data.shift();
+            b4 = data.shift();
+            count = ((b1 << 24) & 0xff000000) +
+                ((b2 << 16) & 0xff0000) +
+                ((b3 << 8) & 0xff00) +
+                ((b4) & 0xff)
+            for (var i = 0; i < count; i++) {
+                readUTF();
+            }
+            readClassAnnotation();
+            addSuperClassDesc(cdd, readSuperClassDesc());
+
+        }
+        function readSuperClassDesc() {
+            var cdd = new ClassDataDesc();
+            cdd = readClassDesc();
+            return cdd;
+        }
+        function addSuperClassDesc(cdd, scdd) {
+            if (scdd != null) {
+                for (var i = 0; i < scdd._classDetails.length; i++) {
+                    cdd._classDetails.unshift(scdd._classDetails[i]);
+                }
+            }
+        }
+        function readClassAnnotation() {
+            while (data[0] != 0x78) {
+                readContentElement();
+            }
+            data.shift();
+            print("TC_ENDBLOCKDATA - 0x78");
+        }
+        function readFields(cdd) {
+            var b1, b2;
+            var count;
+            b1 = data.shift();
+            b2 = data.shift();
+            count = ((b1 << 8) & 0xff00) + (b2 & 0xff);
+            if (count > 0) {
+                for (var i = 0; i < count; i++) {
+                    cdd = readFieldDesc(cdd);
+                }
+            }
+        }
+        function readFieldDesc(cdd) {
+            var b1;
+            b1 = data.shift();
+            cdd._classDetails[cdd._classDetails.length - 1]._fieldDescriptions.push(new ClassField(b1)); //add field type
+            cdd._classDetails[cdd._classDetails.length - 1]._fieldDescriptions[cdd._classDetails[cdd._classDetails.length - 1]._fieldDescriptions.length - 1]._name = readUTF(); //set LastFieldName
+            if (String.fromCharCode(b1) == '[' || String.fromCharCode(b1) == 'L') {
+                cdd._classDetails[cdd._classDetails.length - 1]._fieldDescriptions[cdd._classDetails[cdd._classDetails.length - 1]._fieldDescriptions.length - 1]._className1 = readNewString();
+            }
+            return cdd;
+        }
+        function readNewString() {
+            var handle;
+            switch (data[0]) {
+                case TC_STRING:
+                    return readTC_STRING();
+                case TC_LONGSTRING:
+                    return readTC_LONGSTRING();
+                case TC_REFERENCE:
+                    readPrevObject();
+                    return "[TC_REF]"
+                default:
+                    throw new Error("Error illegal newString type.")
+            }
+        }
+        function readTC_STRING() {
+            var val;
+            var b1;
+
+            b1 = data.shift();
+            newHandle();
+            val = readUTF();
+            return val;
+        }
+        function readTC_LONGSTRING() {
+            var val;
+            var b1;
+
+            b1 = data.shift();
+            newHandle();
+            val = readLongUtf();
+            return val;
+        }
+        function newHandle() {
+            handleValue++;
+        }
+    </script>
+</head>
+
+<body>
+    <h1>Shiro 反序列化payload在线解密</h1>
+    <textarea id="rawPayload" cols="70" rows="20">输入Base64编码后的payload</textarea>
+    <button onclick=decryptAES()>解密</button>
+    <h3>解密结果：</h3>
+    <div id="result">
+        <p id="status"></p>
+        <p id="key"></p>
+        <p id="deserialError"></p>
+        <textarea id="rawObject" readonly="readonly" cols="70" rows="20" wrap="virtual" display="none"></textarea>
+        <p id="deserializedObject"></p>
+        <p id="bytecode"></p>
+        <a id="bytecodeFile"></a>
+    </div>
+    <script>
+        var a = document.getElementById("rawObject");
+        a.style.display = "none";
+    </script>
+</body>
