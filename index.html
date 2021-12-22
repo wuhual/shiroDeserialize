@@ -5,6 +5,7 @@
 <head>
     <title>Shiro反序列化在线解密</title>
     <script src="https://cdn.bootcdn.net/ajax/libs/crypto-js/4.0.0/crypto-js.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/sjcl/1.0.8/sjcl.js"></script>
     <script>
         var TC_OBJECT = 0x73
         var TC_CLASS = 0x76
@@ -55,6 +56,7 @@
             return bytes;
         }
         function decryptAES() {
+            var payloadBin_GCM = "";
             payloadSerialized = "";
             data = [];
             _classDataDescriptions = [];
@@ -70,24 +72,49 @@
                 alert("输入正确的payload！"+error);
             }
             for (let i = 0, len = keys.length; i < len; i++) {
+                // ECB Decrypt
                 var keyHex = CryptoJS.enc.Base64.parse(keys[i]);
                 //console.log(CryptoJS.enc.Utf8.stringify(payloadDecrypted));
                 var payloadEncryptedHex = payloadBase64DecodeStr.slice(16);
                 payloadEncryptedHex = btoa(payloadEncryptedHex);
                 var IVHex = payloadBase64DecodeStr.slice(0, 16);
+
                 IVHex = btoa(IVHex)
                 IVHex = CryptoJS.enc.Base64.parse(IVHex)
-                var payloadDecrypted = CryptoJS.AES.decrypt(payloadEncryptedHex, keyHex, {
+                var payloadDecrypted_ECB = CryptoJS.AES.decrypt(payloadEncryptedHex, keyHex, {
                     iv: IVHex,
                     mode: CryptoJS.mode.CBC,
                     padding: CryptoJS.pad.Pkcs7
                 });
-                payloadBin = payloadDecrypted.toString()
+
+                // GCM Decrypt
+                keyHex = sjcl.codec.base64.toBits(keys[i]);
+                let cipherGCM = new sjcl.cipher.aes(keyHex);
+                let bitsData = sjcl.codec.base64.toBits(btoa(payloadBase64DecodeStr.slice(16)));
+                let bitsTag = sjcl.codec.base64.toBits(btoa(payloadBase64DecodeStr.slice(-16)));
+                let bitsIV = sjcl.codec.base64.toBits(btoa(payloadBase64DecodeStr.slice(0,16)));
+                try {
+                    //var payloadDecrypted_GCM = sjcl.mode.gcm.decrypt(cipherGCM,bitsData,bitsIV,bitsTag,128);
+                    var payloadDecrypted_GCM = sjcl.mode.gcm.decrypt(cipherGCM,bitsData,bitsIV);
+                    payloadBin_GCM =  sjcl.codec.hex.fromBits(payloadDecrypted_GCM);
+                } catch (error) {
+                    console.log(error);
+                }
+                payloadBin = payloadDecrypted_ECB.toString()
                 if (payloadBin.slice(0, 8) == "aced0005") {
-                    realKey = keys[i];
+
                     document.getElementById("status").innerText = "成功";
                     document.getElementById("key").innerText = "Key: " + realKey;
                     payloadSerialized = payloadBin;
+                }else if(payloadBin_GCM.slice(0,8)=="aced0005"){
+                    realKey = keys[i];
+                    document.getElementById("status").innerText = "成功";
+                    document.getElementById("key").innerText = "Key: " + realKey;
+                    payloadSerialized = payloadBin_GCM;
+                }else{
+                    document.getElementById("status").innerText = "解密失败，未找到对应key或内容有问题。";
+                    continue;
+                }
                     try {
                         parseStream();
                     } catch (error) {
@@ -99,8 +126,6 @@
                     outputClassDataDescription();
                     detectBytecode();
                     return;
-                }
-                document.getElementById("status").innerText = "解密失败，未找到对应key或内容有问题。本工具目前仅支持CBC模式。";
             }
         }
         function detectBytecode() {

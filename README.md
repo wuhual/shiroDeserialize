@@ -10,5 +10,5 @@
 
 TODO:
 
-- [ ] 支持GCM模式
+- [x] 支持GCM模式
 - [ ] 优化Object显示
